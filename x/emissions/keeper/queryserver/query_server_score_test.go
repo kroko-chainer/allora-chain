@@ -8,68 +8,71 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (s *KeeperTestSuite) TestGetLatestInfererScore() {
+func (s *KeeperTestSuite) TestGetInfererScoreEma() {
 	ctx := s.ctx
 	keeper := s.emissionsKeeper
 	topicId := uint64(1)
 	worker := "worker1"
+	alpha := alloraMath.OneDec()
 	oldScore := types.Score{TopicId: topicId, BlockHeight: 1, Address: worker, Score: alloraMath.NewDecFromInt64(90)}
 	newScore := types.Score{TopicId: topicId, BlockHeight: 2, Address: worker, Score: alloraMath.NewDecFromInt64(95)}
 
 	// Set an initial score for inferer and attempt to update with an older score
-	_ = keeper.SetLatestInfererScore(ctx, topicId, worker, newScore)
-	err := keeper.SetLatestInfererScore(ctx, topicId, worker, oldScore)
+	_ = keeper.UpdateInfererScoreEma(ctx, topicId, alpha, worker, newScore)
+	err := keeper.UpdateInfererScoreEma(ctx, topicId, alpha, worker, oldScore)
 	s.Require().NoError(err, "Setting an older inferer score should not fail but should not update")
 
-	req := &types.QueryLatestInfererScoreRequest{
+	req := &types.QueryInfererScoreEmaRequest{
 		TopicId: topicId,
 		Worker:  worker,
 	}
-	response, err := s.queryServer.GetLatestInfererScore(ctx, req)
+	response, err := s.queryServer.GetInfererScoreEma(ctx, req)
 	s.Require().NoError(err)
 
 	updatedScore := response.Score
 	s.Require().NotEqual(oldScore.Score, updatedScore.Score, "Older score should not replace newer score")
 }
 
-func (s *KeeperTestSuite) TestGetLatestForecasterScore() {
+func (s *KeeperTestSuite) TestGetForecasterScoreEma() {
 	ctx := s.ctx
 	keeper := s.emissionsKeeper
 	topicId := uint64(1)
 	worker := "worker1"
 	forecaster := "forecaster1"
+	alpha := alloraMath.OneDec()
 	newScore := types.Score{TopicId: topicId, BlockHeight: 2, Address: worker, Score: alloraMath.NewDecFromInt64(95)}
 
 	// Set a new score for forecaster
-	_ = keeper.SetLatestForecasterScore(ctx, topicId, forecaster, newScore)
+	_ = keeper.UpdateForecasterScoreEma(ctx, topicId, alpha, forecaster, newScore)
 
-	req := &types.QueryLatestForecasterScoreRequest{
+	req := &types.QueryForecasterScoreEmaRequest{
 		TopicId:    topicId,
 		Forecaster: forecaster,
 	}
-	response, err := s.queryServer.GetLatestForecasterScore(ctx, req)
+	response, err := s.queryServer.GetForecasterScoreEma(ctx, req)
 	s.Require().NoError(err)
 
 	forecasterScore := response.Score
 	s.Require().Equal(newScore.Score, forecasterScore.Score, "Newer forecaster score should be set")
 }
 
-func (s *KeeperTestSuite) TestGetLatestReputerScore() {
+func (s *KeeperTestSuite) TestGetReputerScoreEma() {
 	ctx := s.ctx
 	keeper := s.emissionsKeeper
 	topicId := uint64(1)
 	worker := "worker1"
 	reputer := "reputer1"
+	alpha := alloraMath.OneDec()
 	newScore := types.Score{TopicId: topicId, BlockHeight: 2, Address: worker, Score: alloraMath.NewDecFromInt64(95)}
 
 	// Set a new score for reputer
-	_ = keeper.SetLatestReputerScore(ctx, topicId, reputer, newScore)
+	_ = keeper.UpdateReputerScoreEma(ctx, topicId, alpha, reputer, newScore)
 
-	req := &types.QueryLatestReputerScoreRequest{
+	req := &types.QueryReputerScoreEmaRequest{
 		TopicId: topicId,
 		Reputer: reputer,
 	}
-	response, err := s.queryServer.GetLatestReputerScore(ctx, req)
+	response, err := s.queryServer.GetReputerScoreEma(ctx, req)
 	s.Require().NoError(err)
 
 	reputerScore := response.Score
