@@ -50,12 +50,12 @@ func GetLockedTokenSupply(
 // helper function to get the number of staked tokens on the network
 // includes both tokens staked by cosmos validators (cosmos staking)
 // and tokens staked by reputers (allora staking)
-func GetNumStakedTokens(ctx context.Context, k Keeper) (math.Int, error) {
+func GetNumStakedTokens(ctx context.Context, k types.MintKeeper) (math.Int, error) {
 	cosmosValidatorsStaked, err := k.CosmosValidatorStakedSupply(ctx)
 	if err != nil {
 		return math.Int{}, err
 	}
-	reputersStaked, err := k.emissionsKeeper.GetTotalStake(ctx)
+	reputersStaked, err := k.GetEmissionsKeeperTotalStake(ctx)
 	if err != nil {
 		return math.Int{}, err
 	}
@@ -63,7 +63,7 @@ func GetNumStakedTokens(ctx context.Context, k Keeper) (math.Int, error) {
 }
 
 // The total amount of tokens emitted for a full month
-// E_i = e_i*N_{staked,i}
+// \cal E_i = e_i*N_{staked,i}
 // where e_i is the emission per unit staked token
 // and N_{staked,i} is the total amount of tokens staked at timestep i
 // THIS FUNCTION TRUNCATES THE RESULT DIVISION TO AN INTEGER
@@ -169,8 +169,8 @@ func GetExponentialMovingAverage(
 	alphaEmission math.LegacyDec,
 	previousRewardEmissionPerUnitStakedToken math.LegacyDec,
 ) math.LegacyDec {
-	firstTerm := targetRewardEmissionPerUnitStakedToken.Mul(alphaEmission)
-	secondTerm := math.OneInt().ToLegacyDec().Sub(alphaEmission).
-		Mul(previousRewardEmissionPerUnitStakedToken)
+	firstTerm := alphaEmission.Mul(targetRewardEmissionPerUnitStakedToken)
+	inverseAlpha := math.OneInt().ToLegacyDec().Sub(alphaEmission)
+	secondTerm := inverseAlpha.Mul(previousRewardEmissionPerUnitStakedToken)
 	return firstTerm.Add(secondTerm)
 }
