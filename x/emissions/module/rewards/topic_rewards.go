@@ -114,7 +114,6 @@ func IdentifyChurnableAmongActiveTopicsAndApplyFn(
 		moduleParams.MaxTopicsPerBlock,
 		block,
 	)
-
 	for _, topicId := range sortedTopActiveTopics {
 		weight := weightsOfTopActiveTopics[topicId]
 		if weight.Equal(alloraMath.ZeroDec()) {
@@ -168,6 +167,7 @@ func GetAndUpdateActiveTopicWeights(
 			moduleParams.TopicRewardAlpha,
 			moduleParams.TopicRewardStakeImportance,
 			moduleParams.TopicRewardFeeRevenueImportance,
+			cosmosMath.ZeroInt(),
 			cosmosMath.ZeroInt(),
 		)
 		if err != nil {
